@@ -1,0 +1,19 @@
+# Dependencies
+frontend/node_modules/
+
+# Build outputs
+frontend/dist/
+
+# Environment files (keep .env.example, ignore real secrets)
+frontend/.env.local
+frontend/.env.*.local
+
+# Go build artifacts
+backend/server.exe
+backend/main
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

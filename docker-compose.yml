@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # MongoDB Service
+  mongodb:
+    image: mongo:7.0
+    container_name: livepoll-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # Redis Service (Real-time Pub/Sub & Atomic Tallies)
+  redis:
+    image: redis:7-alpine
+    container_name: livepoll-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Go Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: livepoll-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - MONGO_URI=mongodb://mongodb:27017
+      - DB_NAME=livepoll_db
+      - REDIS_ADDR=redis:6379
+      - JWT_SECRET=livepoll-guvi-hcl-internship-secret-key-2026
+      - CLIENT_ORIGIN=*
+    depends_on:
+      - mongodb
+      - redis
+
+  # React Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: livepoll-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+  redis_data:
