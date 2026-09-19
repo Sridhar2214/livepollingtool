@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UserPlus, User, Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, AlertCircle, ArrowRight, BarChart2, Sparkles, Share2, Zap } from 'lucide-react';
 
 export const Register = () => {
   const [username, setUsername] = useState('');
@@ -17,7 +17,6 @@ export const Register = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       await register(username, email, password);
       navigate('/dashboard');
@@ -29,27 +28,74 @@ export const Register = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="glass-card p-8 rounded-3xl border border-slate-200/90 shadow-xl">
-          <div className="text-center mb-8">
-            <div className="inline-flex p-3 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 mb-3">
-              <UserPlus className="w-6 h-6" />
+    <div className="min-h-[90vh] flex">
+      {/* Left Panel */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-950 via-indigo-950 to-slate-900" />
+        <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-violet-500/25 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 left-1/4 w-56 h-56 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-white/10 backdrop-blur-sm">
+              <BarChart2 className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-2xl font-black text-slate-900">Create Account</h2>
-            <p className="text-xs text-slate-500 mt-1">Register to start hosting live audience polls</p>
+            <span className="text-xl font-black text-white">Live<span className="text-violet-400">Poll</span></span>
+          </Link>
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-white/70 text-xs font-semibold mb-6">
+              <Sparkles className="w-3 h-3 text-violet-400" />
+              Free forever — no credit card
+            </div>
+            <h2 className="text-3xl font-black text-white mb-4 leading-snug">
+              Start collecting<br />
+              <span className="text-violet-400">audience votes today.</span>
+            </h2>
+            <p className="text-white/50 text-sm mb-10">Join thousands of creators who run live polls for events, classrooms, and team meetings.</p>
+            <div className="space-y-4">
+              {[
+                { icon: Zap, text: 'Create unlimited polls for free' },
+                { icon: Share2, text: 'Simple shareable links — no app needed' },
+                { icon: BarChart2, text: 'Live results dashboard in real-time' },
+              ].map((item) => (
+                <div key={item.text} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                    <item.icon className="w-4 h-4 text-violet-400" />
+                  </div>
+                  <span className="text-white/70 text-sm">{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="text-white/20 text-xs">© 2026 LivePoll</p>
+        </div>
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-slate-50">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <Link to="/" className="lg:hidden flex items-center gap-2 mb-8 justify-center">
+            <div className="p-1.5 rounded-lg bg-violet-600">
+              <BarChart2 className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-lg font-black text-slate-900">Live<span className="text-violet-600">Poll</span></span>
+          </Link>
+
+          <div className="mb-8">
+            <h1 className="text-2xl font-black text-slate-900 mb-1">Create your free account</h1>
+            <p className="text-sm text-slate-500">Start running live polls in under a minute</p>
           </div>
 
           {error && (
-            <div className="mb-6 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2.5">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-3">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Username</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Username</label>
               <div className="relative">
                 <input
                   type="text"
@@ -57,30 +103,30 @@ export const Register = () => {
                   minLength={3}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="alex_dev"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-xs font-medium"
+                  placeholder="john_doe"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-violet-500 focus:ring-3 focus:ring-violet-500/15 transition"
                 />
-                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <User className="w-4 h-4 text-slate-400 absolute left-4 top-4" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Email Address</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
               <div className="relative">
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="creator@example.com"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-xs font-medium"
+                  placeholder="you@example.com"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-violet-500 focus:ring-3 focus:ring-violet-500/15 transition"
                 />
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-4" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Password</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
               <div className="relative">
                 <input
                   type="password"
@@ -89,26 +135,33 @@ export const Register = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-xs font-medium"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-violet-500 focus:ring-3 focus:ring-violet-500/15 transition"
                 />
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-4" />
               </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-violet-500/25 transition-all disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
             >
-              {loading ? 'Creating Account...' : 'Sign Up'}
-              <ArrowRight className="w-4 h-4" />
+              {loading ? (
+                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Creating Account...</>
+              ) : (
+                <>Create Free Account <ArrowRight className="w-4 h-4" /></>
+              )}
             </button>
+
+            <p className="text-center text-xs text-slate-400">
+              By signing up, you agree to our Terms of Service.
+            </p>
           </form>
 
-          <p className="text-center text-xs text-slate-500 mt-6">
+          <p className="text-center text-sm text-slate-500 mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="text-blue-600 font-semibold hover:underline">
-              Log in
+            <Link to="/login" className="text-violet-600 font-semibold hover:text-violet-700 transition">
+              Sign in →
             </Link>
           </p>
         </div>
