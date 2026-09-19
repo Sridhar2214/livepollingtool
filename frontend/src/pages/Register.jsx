@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Lock, AlertCircle, ArrowRight, Activity, Sparkles, Share2, Zap } from 'lucide-react';
+import { User, Mail, Lock, AlertCircle, ArrowRight, Activity, Sparkles, Share2, Zap, BarChart2 } from 'lucide-react';
 
 export const Register = () => {
   const [username, setUsername] = useState('');
@@ -31,9 +31,9 @@ export const Register = () => {
     <div className="min-h-[90vh] flex">
       {/* Left Panel */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-950 via-indigo-950 to-slate-900" />
-        <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-violet-500/25 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 left-1/4 w-56 h-56 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900" />
+        <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-blue-500/25 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 left-1/4 w-56 h-56 bg-sky-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-500">
@@ -43,12 +43,12 @@ export const Register = () => {
           </Link>
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-white/70 text-xs font-semibold mb-6">
-              <Sparkles className="w-3 h-3 text-violet-400" />
+              <Sparkles className="w-3 h-3 text-sky-400" />
               Free forever — no credit card
             </div>
             <h2 className="text-3xl font-black text-white mb-4 leading-snug">
               Start collecting<br />
-              <span className="text-violet-400">audience votes today.</span>
+              <span className="text-sky-400">audience votes today.</span>
             </h2>
             <p className="text-white/50 text-sm mb-10">Join thousands of creators who run live polls for events, classrooms, and team meetings.</p>
             <div className="space-y-4">
@@ -59,7 +59,7 @@ export const Register = () => {
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                    <item.icon className="w-4 h-4 text-violet-400" />
+                    <item.icon className="w-4 h-4 text-sky-400" />
                   </div>
                   <span className="text-white/70 text-sm">{item.text}</span>
                 </div>
@@ -104,7 +104,7 @@ export const Register = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="john_doe"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-violet-500 focus:ring-3 focus:ring-violet-500/15 transition"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-500/15 transition"
                 />
                 <User className="w-4 h-4 text-slate-400 absolute left-4 top-4" />
               </div>
@@ -119,7 +119,7 @@ export const Register = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-violet-500 focus:ring-3 focus:ring-violet-500/15 transition"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-500/15 transition"
                 />
                 <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-4" />
               </div>
@@ -135,7 +135,7 @@ export const Register = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-violet-500 focus:ring-3 focus:ring-violet-500/15 transition"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-500/15 transition"
                 />
                 <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-4" />
               </div>
@@ -144,7 +144,7 @@ export const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-violet-500/25 transition-all disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
+              className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/25 transition-all disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
             >
               {loading ? (
                 <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Creating Account...</>
@@ -160,7 +160,7 @@ export const Register = () => {
 
           <p className="text-center text-sm text-slate-500 mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="text-violet-600 font-semibold hover:text-violet-700 transition">
+            <Link to="/login" className="text-blue-600 font-semibold hover:text-blue-700 transition">
               Sign in →
             </Link>
           </p>
