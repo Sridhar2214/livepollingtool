@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { apiClient } from '../api/client';
+import { apiClient, getWebSocketUrl } from '../api/client';
 import { PollCard } from '../components/PollCard';
 import { ShareModal } from '../components/ShareModal';
 import { Plus, BarChart3, Radio, CheckCircle, Search, RefreshCw, AlertCircle } from 'lucide-react';
@@ -28,6 +28,54 @@ export const Dashboard = () => {
   useEffect(() => {
     fetchPolls();
   }, []);
+
+  // Live WebSocket updates for all active polls on the dashboard
+  useEffect(() => {
+    if (polls.length === 0) return;
+
+    const activePollIds = polls.filter(p => !p.is_closed).map(p => p.id);
+    if (activePollIds.length === 0) return;
+
+    const sockets = activePollIds.map(pollId => {
+      const socket = new WebSocket(getWebSocketUrl(pollId));
+
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'VOTE_UPDATE') {
+            setPolls(prev => prev.map(poll => {
+              if (poll.id !== pollId) return poll;
+              const updatedOptions = (poll.options || []).map(opt => ({
+                ...opt,
+                votes: message.option_votes?.[opt.id] !== undefined
+                  ? message.option_votes[opt.id]
+                  : opt.votes,
+              }));
+              return {
+                ...poll,
+                total_votes: message.total_votes,
+                options: updatedOptions,
+                is_closed: message.is_closed ?? poll.is_closed,
+              };
+            }));
+          }
+        } catch (err) {
+          console.error('Dashboard WS parse error:', err);
+        }
+      };
+
+      return socket;
+    });
+
+    return () => {
+      sockets.forEach(s => {
+        if (s.readyState === WebSocket.OPEN || s.readyState === WebSocket.CONNECTING) {
+          s.close();
+        }
+      });
+    };
+  }, [polls.map(p => p.id).join(',')]);
+
 
   const handleClosePoll = async (pollId) => {
     if (!window.confirm('Are you sure you want to close this poll? Voters will no longer be able to submit votes.')) return;
