@@ -5,7 +5,7 @@ import { apiClient, getWebSocketUrl } from '../api/client';
 import { getVoterFingerprint } from '../utils/fingerprint';
 import { LiveBadge } from '../components/LiveBadge';
 import { ShareModal } from '../components/ShareModal';
-import { Check, Vote, Share2, AlertCircle, Lock, BarChart3, Radio, Clock, Sparkles } from 'lucide-react';
+import { Check, Vote, Share2, AlertCircle, Lock, BarChart3, Radio, Sparkles, TrendingUp, Users } from 'lucide-react';
 
 export const PollView = () => {
   const { id } = useParams();
@@ -13,6 +13,7 @@ export const PollView = () => {
   const [poll, setPoll] = useState(null);
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [hasVoted, setHasVoted] = useState(false);
+  const [showResultsPreview, setShowResultsPreview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -20,6 +21,7 @@ export const PollView = () => {
   const [isShareOpen, setIsShareOpen] = useState(false);
 
   const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
   const voterFp = getVoterFingerprint();
 
   // 1. Initial Poll Fetch
@@ -44,58 +46,78 @@ export const PollView = () => {
     fetchPoll();
   }, [id]);
 
-  // 2. Real-Time WebSocket Connection to Go Backend
+  // 2. Real-Time WebSocket Connection to Go Backend + Redis Pub/Sub
   useEffect(() => {
     if (!poll?.id) return;
 
-    const wsUrl = getWebSocketUrl(poll.id);
-    let socket = new WebSocket(wsUrl);
-    wsRef.current = socket;
+    let isMounted = true;
 
-    socket.onopen = () => {
-      console.log("⚡ WebSocket connected to Poll room:", poll.id);
-      setWsStatus('connected');
-    };
+    const connectWebSocket = () => {
+      const wsUrl = getWebSocketUrl(poll.id);
+      const socket = new WebSocket(wsUrl);
+      wsRef.current = socket;
 
-    socket.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        if (message.type === 'VOTE_UPDATE') {
-          console.log("📡 Live Vote Event Received:", message);
-          setPoll((prev) => {
-            if (!prev) return prev;
+      socket.onopen = () => {
+        if (!isMounted) return;
+        console.log("⚡ Realtime WebSocket connected to Poll room:", poll.id);
+        setWsStatus('connected');
+      };
 
-            const updatedOptions = prev.options.map((opt) => ({
-              ...opt,
-              votes: message.option_votes[opt.id] !== undefined ? message.option_votes[opt.id] : opt.votes,
-            }));
+      socket.onmessage = (event) => {
+        if (!isMounted) return;
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'VOTE_UPDATE') {
+            console.log("📡 Live Vote Event Received from Redis:", message);
+            setPoll((prev) => {
+              if (!prev) return prev;
 
-            return {
-              ...prev,
-              total_votes: message.total_votes,
-              options: updatedOptions,
-              is_closed: message.is_closed,
-            };
-          });
+              const updatedOptions = prev.options.map((opt) => ({
+                ...opt,
+                votes:
+                  message.option_votes && message.option_votes[opt.id] !== undefined
+                    ? message.option_votes[opt.id]
+                    : opt.votes,
+              }));
+
+              return {
+                ...prev,
+                total_votes: message.total_votes !== undefined ? message.total_votes : prev.total_votes,
+                options: updatedOptions,
+                is_closed: message.is_closed !== undefined ? message.is_closed : prev.is_closed,
+              };
+            });
+          }
+        } catch (err) {
+          console.error("Failed to parse WebSocket message:", err);
         }
-      } catch (err) {
-        console.error("Failed to parse WebSocket message:", err);
-      }
+      };
+
+      socket.onerror = (err) => {
+        if (!isMounted) return;
+        console.warn("WebSocket error:", err);
+        setWsStatus('offline');
+      };
+
+      socket.onclose = () => {
+        if (!isMounted) return;
+        console.log("WebSocket disconnected. Retrying in 3 seconds...");
+        setWsStatus('offline');
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (isMounted) connectWebSocket();
+        }, 3000);
+      };
     };
 
-    socket.onerror = (err) => {
-      console.warn("WebSocket error:", err);
-      setWsStatus('offline');
-    };
-
-    socket.onclose = () => {
-      console.log("WebSocket disconnected");
-      setWsStatus('offline');
-    };
+    connectWebSocket();
 
     return () => {
-      if (socket) {
-        socket.close();
+      isMounted = false;
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
       }
     };
   }, [poll?.id]);
@@ -133,13 +155,16 @@ export const PollView = () => {
         voter_fingerprint: voterFp,
       });
 
-      // Update state with response tallies
+      // Update state with response tallies immediately without page refresh
       setPoll((prev) => ({
         ...prev,
         total_votes: response.data.total_votes,
         options: prev.options.map((opt) => ({
           ...opt,
-          votes: response.data.option_votes[opt.id] !== undefined ? response.data.option_votes[opt.id] : opt.votes,
+          votes:
+            response.data.option_votes && response.data.option_votes[opt.id] !== undefined
+              ? response.data.option_votes[opt.id]
+              : opt.votes,
         })),
       }));
 
@@ -198,12 +223,21 @@ export const PollView = () => {
   const totalVotes = poll.total_votes || 0;
   const isExpired = poll.settings?.expires_at && new Date() > new Date(poll.settings.expires_at);
   const isClosed = poll.is_closed || isExpired;
+  // Determine if full live results (progress bars and percentages) should be rendered
+  const showFullResults = hasVoted || isClosed || showResultsPreview;
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Realtime Live Connection Header */}
       <div className="flex items-center justify-between gap-4 mb-6">
-        <LiveBadge status={wsStatus} />
+        <div className="flex items-center gap-3">
+          <LiveBadge status={wsStatus} />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>{totalVotes}</span>
+            <span>{totalVotes === 1 ? 'total vote' : 'total votes'}</span>
+          </span>
+        </div>
         <button
           onClick={() => setIsShareOpen(true)}
           className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-semibold shadow-xs transition"
@@ -213,7 +247,7 @@ export const PollView = () => {
       </div>
 
       {/* Main Poll Voting Card */}
-      <div className="glass-card p-6 sm:p-10 rounded-3xl border border-slate-200/90 shadow-xl relative overflow-hidden">
+      <div className="glass-card p-6 sm:p-10 rounded-3xl border border-slate-200/90 shadow-xl relative overflow-hidden bg-white/95 backdrop-blur-md">
         {/* Closed Banner */}
         {isClosed && (
           <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center justify-between">
@@ -228,6 +262,7 @@ export const PollView = () => {
         {/* Creator Info */}
         <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
           <span>Created by <strong className="text-slate-800 font-semibold">{poll.creator_name || 'Anonymous'}</strong></span>
+          <span className="text-slate-400">Live tallying via Redis</span>
         </div>
 
         {/* Question Title */}
@@ -239,6 +274,20 @@ export const PollView = () => {
           <p className="text-sm text-slate-600 mb-6 leading-relaxed">{poll.description}</p>
         )}
 
+        {/* Post-vote success banner */}
+        {hasVoted && (
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between">
+            <div className="flex items-center gap-2 font-semibold">
+              <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Your vote has been recorded! Live results are updating in real-time below without refresh.</span>
+            </div>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 uppercase tracking-wider shrink-0 bg-emerald-100 px-2 py-0.5 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Live
+            </span>
+          </div>
+        )}
+
         {error && (
           <div className="mb-6 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
@@ -246,70 +295,117 @@ export const PollView = () => {
           </div>
         )}
 
-        {/* Options List with Animated Live Bar Graphs */}
+        {/* Options List with Realtime Updating Votes & Progress Bars */}
         <form onSubmit={handleSubmitVote} className="space-y-3.5 my-6">
           {poll.options.map((opt) => {
+            const votes = opt.votes || 0;
+            const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
             const isSelected = selectedOptions.includes(opt.id);
 
             return (
               <div
                 key={opt.id}
                 onClick={() => handleOptionToggle(opt.id)}
-                className={`relative p-4 rounded-2xl border transition-all cursor-pointer ${
-                  isSelected
-                    ? 'border-blue-600 bg-blue-50/70 shadow-sm ring-1 ring-blue-500/30'
-                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
-                } ${isClosed ? 'cursor-default' : ''}`}
+                className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl border transition-all ${
+                  hasVoted || isClosed
+                    ? 'cursor-default border-slate-200/90 bg-white'
+                    : isSelected
+                    ? 'cursor-pointer border-blue-600 bg-blue-50/70 shadow-sm ring-2 ring-blue-500/20'
+                    : 'cursor-pointer border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+                }`}
               >
-                <div className="flex items-center gap-3">
-                  {/* Checkbox / Radio Indicator */}
-                  {!isClosed && !hasVoted && (
-                    <div
-                      className={`w-5 h-5 rounded-${
-                        poll.settings?.allow_multiple ? 'md' : 'full'
-                      } border flex items-center justify-center transition shrink-0 ${
-                        isSelected
-                          ? 'bg-blue-600 border-blue-600 text-white'
-                          : 'border-slate-300 bg-white'
-                      }`}
-                    >
-                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                    </div>
-                  )}
-                  <span
-                    className="w-3 h-3 rounded-full shrink-0"
-                    style={{ backgroundColor: opt.color || '#2563eb' }}
-                  ></span>
-                  <span className="text-sm font-bold text-slate-900">{opt.text}</span>
+                {/* Real-time Progress Bar Fill (visible once voted, closed, or preview enabled) */}
+                {showFullResults && (
+                  <div
+                    className="absolute top-0 left-0 bottom-0 opacity-15 transition-all duration-700 ease-out"
+                    style={{
+                      width: `${pct}%`,
+                      backgroundColor: opt.color || '#3b82f6',
+                    }}
+                  />
+                )}
+
+                <div className="relative z-10 flex items-center justify-between gap-4">
+                  {/* Option Left Details: Selection badge + Color dot + Text */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* Checkbox / Radio Indicator (before voting) */}
+                    {!isClosed && !hasVoted && (
+                      <div
+                        className={`w-5 h-5 rounded-${
+                          poll.settings?.allow_multiple ? 'md' : 'full'
+                        } border flex items-center justify-center transition shrink-0 ${
+                          isSelected
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : 'border-slate-300 bg-white'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                      </div>
+                    )}
+
+                    {/* Voted check badge (after voting) */}
+                    {hasVoted && isSelected && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-600 text-white text-xs font-bold shadow-xs shrink-0">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" /> Your vote
+                      </span>
+                    )}
+
+                    <span
+                      className="w-3 h-3 rounded-full shrink-0"
+                      style={{ backgroundColor: opt.color || '#3b82f6' }}
+                    />
+                    <span className="text-sm sm:text-base font-bold text-slate-900 truncate">{opt.text}</span>
+                  </div>
+
+                  {/* Realtime Live Vote Count & Percentage (updates without page refresh) */}
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <span className="text-slate-800 font-extrabold text-sm sm:text-base tracking-tight">
+                      {votes} <span className="text-xs text-slate-500 font-semibold">{votes === 1 ? 'vote' : 'votes'}</span>
+                    </span>
+                    {showFullResults && (
+                      <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/60 min-w-[42px] text-center">
+                        {pct}%
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })}
 
-          {/* Submit Vote Button */}
+          {/* Submit Vote Button (when user hasn't voted yet) */}
           {!hasVoted && !isClosed && (
-            <button
-              type="submit"
-              disabled={submitting || selectedOptions.length === 0}
-              className="w-full mt-4 py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-md shadow-blue-600/25 transition disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              <Vote className="w-4 h-4" />
-              {submitting ? 'Submitting Vote...' : 'Submit Your Vote'}
-            </button>
-          )}
+            <div className="pt-2 space-y-3">
+              <button
+                type="submit"
+                disabled={submitting || selectedOptions.length === 0}
+                className="w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-md shadow-blue-600/25 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Vote className="w-4 h-4" />
+                {submitting ? 'Submitting Vote...' : 'Submit Your Vote'}
+              </button>
 
-          {hasVoted && (
-            <div className="mt-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs text-center font-semibold flex items-center justify-center gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-600" />
-              <span>Your vote has been cast! Real-time results will automatically update below.</span>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowResultsPreview(!showResultsPreview)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition inline-flex items-center gap-1.5"
+                >
+                  <BarChart3 className="w-3.5 h-3.5" />
+                  {showResultsPreview ? 'Hide live percentage bars' : 'Audience view: Show live percentage bars'}
+                </button>
+              </div>
             </div>
           )}
         </form>
 
-        {/* Footer Settings Info */}
-        <div className="pt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-          <span>{poll.settings?.allow_multiple ? 'Multiple options allowed' : 'Single vote selection'}</span>
-          <span>Updates live via WebSocket</span>
+        {/* Footer Info */}
+        <div className="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
+          <span>{poll.settings?.allow_multiple ? '☑ Multiple options allowed' : '◉ Single vote selection'}</span>
+          <span className="flex items-center gap-1.5 text-blue-600 font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span>
+            Live Redis Pub/Sub WebSocket
+          </span>
         </div>
       </div>
 
