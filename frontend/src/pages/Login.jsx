@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, AlertCircle, ArrowRight, BarChart2, Zap, Users } from 'lucide-react';
+import { Mail, Lock, AlertCircle, ArrowRight, Activity, Zap, Users } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -35,10 +35,10 @@ export const Login = () => {
         <div className="absolute bottom-1/3 right-1/4 w-56 h-56 bg-violet-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-white/10 backdrop-blur-sm">
-              <BarChart2 className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 backdrop-blur-sm">
+              <Activity className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-black text-white">Live<span className="text-indigo-400">Poll</span></span>
+            <span className="text-xl font-black text-white">Live<span className="text-amber-400">Poll</span></span>
           </Link>
           <div>
             <h2 className="text-3xl font-black text-white mb-4 leading-snug">
@@ -70,10 +70,10 @@ export const Login = () => {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <Link to="/" className="lg:hidden flex items-center gap-2 mb-8 justify-center">
-            <div className="p-1.5 rounded-lg bg-indigo-600">
-              <BarChart2 className="w-4 h-4 text-white" />
+            <div className="p-1.5 rounded-lg bg-gradient-to-tr from-orange-500 to-amber-500">
+              <Activity className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-black text-slate-900">Live<span className="text-indigo-600">Poll</span></span>
+            <span className="text-lg font-black text-slate-900">Live<span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">Poll</span></span>
           </Link>
 
           <div className="mb-8">
