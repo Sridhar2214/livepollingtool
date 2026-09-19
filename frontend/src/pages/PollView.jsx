@@ -225,10 +225,9 @@ export const PollView = () => {
           </div>
         )}
 
-        {/* Creator & Expiry Info */}
+        {/* Creator Info */}
         <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
           <span>Created by <strong className="text-slate-800 font-semibold">{poll.creator_name || 'Anonymous'}</strong></span>
-          <span className="font-semibold text-slate-600">{totalVotes} total votes</span>
         </div>
 
         {/* Question Title */}
@@ -250,57 +249,38 @@ export const PollView = () => {
         {/* Options List with Animated Live Bar Graphs */}
         <form onSubmit={handleSubmitVote} className="space-y-3.5 my-6">
           {poll.options.map((opt) => {
-            const votes = opt.votes || 0;
-            const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
             const isSelected = selectedOptions.includes(opt.id);
 
             return (
               <div
                 key={opt.id}
                 onClick={() => handleOptionToggle(opt.id)}
-                className={`relative overflow-hidden p-4 rounded-2xl border transition-all cursor-pointer ${
+                className={`relative p-4 rounded-2xl border transition-all cursor-pointer ${
                   isSelected
                     ? 'border-blue-600 bg-blue-50/70 shadow-sm ring-1 ring-blue-500/30'
                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
                 } ${isClosed ? 'cursor-default' : ''}`}
               >
-                {/* Live Progress Bar Background */}
-                <div
-                  className="absolute top-0 left-0 bottom-0 opacity-15 transition-all duration-700 ease-out"
-                  style={{
-                    width: `${pct}%`,
-                    backgroundColor: opt.color || '#2563eb',
-                  }}
-                ></div>
-
-                <div className="relative z-10 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    {/* Checkbox / Radio Indicator */}
-                    {!isClosed && !hasVoted && (
-                      <div
-                        className={`w-5 h-5 rounded-${
-                          poll.settings?.allow_multiple ? 'md' : 'full'
-                        } border flex items-center justify-center transition ${
-                          isSelected
-                            ? 'bg-blue-600 border-blue-600 text-white'
-                            : 'border-slate-300 bg-white'
-                        }`}
-                      >
-                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                      </div>
-                    )}
-                    <span
-                      className="w-3 h-3 rounded-full shrink-0"
-                      style={{ backgroundColor: opt.color || '#2563eb' }}
-                    ></span>
-                    <span className="text-sm font-bold text-slate-900">{opt.text}</span>
-                  </div>
-
-                  {/* Percentage & Vote Count Tally */}
-                  <div className="flex items-center gap-2 text-xs font-semibold shrink-0">
-                    <span className="text-slate-900 font-bold text-sm">{pct}%</span>
-                    <span className="text-slate-500 text-[11px]">({votes})</span>
-                  </div>
+                <div className="flex items-center gap-3">
+                  {/* Checkbox / Radio Indicator */}
+                  {!isClosed && !hasVoted && (
+                    <div
+                      className={`w-5 h-5 rounded-${
+                        poll.settings?.allow_multiple ? 'md' : 'full'
+                      } border flex items-center justify-center transition shrink-0 ${
+                        isSelected
+                          ? 'bg-blue-600 border-blue-600 text-white'
+                          : 'border-slate-300 bg-white'
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                    </div>
+                  )}
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: opt.color || '#2563eb' }}
+                  ></span>
+                  <span className="text-sm font-bold text-slate-900">{opt.text}</span>
                 </div>
               </div>
             );
