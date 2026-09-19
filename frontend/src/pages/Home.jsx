@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 // Animated live vote bar
 const MockPollBar = ({ label, pct, color, delay }) => {
@@ -33,6 +34,7 @@ const LiveCounter = () => {
 };
 
 export const Home = () => {
+  const { user } = useAuth();
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 40%, #f8fbff 100%)' }}>
 
@@ -71,18 +73,27 @@ export const Home = () => {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
-                to="/register"
+                to={user ? "/create" : "/register"}
                 className="group inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-md shadow-blue-200"
               >
                 Create a poll
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-blue-50 text-slate-700 font-bold text-sm border border-blue-200 transition-all"
-              >
-                Sign in
-              </Link>
+              {user ? (
+                <Link
+                  to="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-blue-50 text-slate-700 font-bold text-sm border border-blue-200 transition-all"
+                >
+                  My Dashboard
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-blue-50 text-slate-700 font-bold text-sm border border-blue-200 transition-all"
+                >
+                  Sign in
+                </Link>
+              )}
             </div>
           </div>
 
@@ -176,10 +187,10 @@ export const Home = () => {
         <h2 className="text-3xl font-black text-slate-900 mb-4">Ready to run your first poll?</h2>
         <p className="text-slate-500 mb-8">Free to use. No credit card. Start in 30 seconds.</p>
         <Link
-          to="/register"
+          to={user ? "/create" : "/register"}
           className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-200 transition-all"
         >
-          Get started free <ArrowRight className="w-4 h-4" />
+          {user ? "Create a poll" : "Get started free"} <ArrowRight className="w-4 h-4" />
         </Link>
       </section>
     </div>
