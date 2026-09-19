@@ -17,11 +17,11 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="p-2 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform">
+          <div className="p-2 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
             <Activity className="w-5 h-5" />
           </div>
           <span className="text-xl font-black text-slate-900 tracking-tight">
-            Live<span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">Poll</span>
+            Live<span className="bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">Poll</span>
           </span>
         </Link>
 
