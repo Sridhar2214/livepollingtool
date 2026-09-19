@@ -34,10 +34,13 @@ const LiveCounter = () => {
 
 export const Home = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 40%, #f8fbff 100%)' }}>
+
+      {/* Subtle grid pattern overlay */}
+      <div className="fixed inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #bfdbfe 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.3 }} />
 
       {/* ── HERO ── */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 pb-24">
+      <section className="relative max-w-6xl mx-auto px-6 pt-16 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
           {/* Left: Copy */}
@@ -45,7 +48,7 @@ export const Home = () => {
             {/* Status badges */}
             <div className="flex flex-wrap gap-2 mb-8">
               {['Live updates', 'Realtime voting', 'Responsive UI'].map(tag => (
-                <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200">
+                <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold border border-blue-200">
                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                   {tag}
                 </span>
@@ -69,14 +72,14 @@ export const Home = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 to="/register"
-                className="group inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm transition-all"
+                className="group inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-md shadow-blue-200"
               >
                 Create a poll
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm border border-slate-200 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-blue-50 text-slate-700 font-bold text-sm border border-blue-200 transition-all"
               >
                 Sign in
               </Link>
@@ -97,7 +100,7 @@ export const Home = () => {
             </div>
 
             {/* Main card */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 relative">
+            <div className="bg-white rounded-3xl border border-blue-100 shadow-xl shadow-blue-100/50 p-6 relative">
               {/* Card header */}
               <div className="flex items-center justify-between mb-5">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
@@ -138,7 +141,7 @@ export const Home = () => {
       </section>
 
       {/* ── FEATURES ── */}
-      <section className="bg-slate-50 border-t border-slate-100">
+      <section className="border-t border-blue-100" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #eff6ff 100%)' }}>
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -158,7 +161,7 @@ export const Home = () => {
                 desc: 'A clean polling flow for events, product feedback, classroom polls, and team decisions.',
               },
             ].map((f) => (
-              <div key={f.title} className="group p-6 rounded-2xl bg-white border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all duration-300">
+              <div key={f.title} className="group p-6 rounded-2xl bg-white border border-blue-100 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-100/60 transition-all duration-300">
                 <span className="text-2xl mb-4 block text-blue-500">{f.icon}</span>
                 <h3 className="font-black text-slate-900 mb-2">{f.title}</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
@@ -174,7 +177,7 @@ export const Home = () => {
         <p className="text-slate-500 mb-8">Free to use. No credit card. Start in 30 seconds.</p>
         <Link
           to="/register"
-          className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm transition-all"
+          className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-200 transition-all"
         >
           Get started free <ArrowRight className="w-4 h-4" />
         </Link>
